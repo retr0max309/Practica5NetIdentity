@@ -1,0 +1,27 @@
+﻿@{
+    ViewData["Title"] = "Arte y Creatividad";
+}
+
+<div class="container mt-4">
+    <div class="card border-0 shadow">
+        <div class="card-header bg-info text-white">
+            <h3 class="m-0">🎨 Arte y Creatividad</h3>
+        </div>
+        <div class="card-body">
+            <h4 class="mb-3">¡Bienvenida, @User.Identity?.Name!</h4>
+            <p class="lead">Esta sección es exclusiva para usuarias con acceso habilitado.</p>
+
+            <hr class="my-4" />
+
+            <ul class="list-unstyled mb-4">
+                <li>🖌️ Tutoriales de dibujo</li>
+                <li>🎭 Teatro y expresión</li>
+                <li>🎵 Música básica</li>
+            </ul>
+
+            <a asp-controller="Actividades" asp-action="Index" class="btn btn-outline-info">
+                Volver al Centro de Actividades
+            </a>
+        </div>
+    </div>
+</div>

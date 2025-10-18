@@ -1,30 +1,32 @@
-﻿using AspNetCoreGeneratedDocument;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace NetIdentity.Controllers
 {
-    
+    [Authorize]
     public class ActividadesController : Controller
     {
         public IActionResult Index()
         {
             return View();
         }
-        //vista->controlador->modelo
-        //modelo->controlador->vista
-        //vista->controlador
-        [Authorize(Policy = "menoresEdad")]
+
+        [Authorize(Policy = "SoloHombres")]
         public IActionResult Deportes()
         {
             return View();
         }
 
-        [Authorize(Roles = "Admin")]
+        [Authorize(Policy = "SoloMujeres")]
+        public IActionResult Arte()
+        {
+            return View();
+        }
+
+        [AllowAnonymous]
         public IActionResult Tareas()
         {
             return View();
         }
     }
-
 }
