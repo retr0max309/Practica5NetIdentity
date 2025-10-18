@@ -1,89 +1,92 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using NetIdentity.Models;
+using System.Threading.Tasks;
 
 namespace NetIdentity.Controllers
 {
     public class AccountController : Controller
     {
-        private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly SignInManager<ApplicationUser> _signInManager;
 
-        public AccountController(
-            SignInManager<ApplicationUser> signInManager,
-            UserManager<ApplicationUser> userManager)
+        public AccountController(UserManager<ApplicationUser> userManager,
+                                 SignInManager<ApplicationUser> signInManager)
         {
-            _signInManager = signInManager;
             _userManager = userManager;
+            _signInManager = signInManager;
         }
 
         [HttpGet]
-        public IActionResult Login()
+        [AllowAnonymous]
+        public IActionResult Login(string? returnUrl = null)
         {
+            ViewData["ReturnUrl"] = returnUrl;
             return View();
         }
 
         [HttpPost]
-        public async Task<IActionResult> Login(string email, string password)
+        [AllowAnonymous]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Login(LoginViewModel model, string? returnUrl = null)
         {
-            var user = await _userManager.FindByEmailAsync(email);
-            if (user != null)
+            if (!ModelState.IsValid) return View(model);
+
+            var result = await _signInManager.PasswordSignInAsync(
+                userName: model.Email,
+                password: model.Password,
+                isPersistent: model.RememberMe,
+                lockoutOnFailure: false);
+
+            if (result.Succeeded)
+                return Redirect(returnUrl ?? Url.Action("Index", "Home")!);
+
+            ModelState.AddModelError(string.Empty, "Credenciales inválidas.");
+            return View(model);
+        }
+
+        [HttpGet]
+        [AllowAnonymous]
+        public IActionResult Register() => View();
+
+        [HttpPost]
+        [AllowAnonymous]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Register(RegisterViewModel model)
+        {
+            if (!ModelState.IsValid) return View(model);
+
+            var user = new ApplicationUser
             {
-                var result = await _signInManager.PasswordSignInAsync(user, password, false, false);
-                if (result.Succeeded)
-                {
-                    return RedirectToAction("Index", "Home");
-                }
+                UserName = model.Email,
+                Email = model.Email,
+                NombreCompleto = model.NombreCompleto,
+                FechaNacimiento = model.FechaNacimiento,
+                Genero = model.Genero
+            };
+
+            var result = await _userManager.CreateAsync(user, model.Password);
+            if (result.Succeeded)
+            {
+                await _signInManager.SignInAsync(user, false);
+                return RedirectToAction("Index", "Home");
             }
-            ViewBag.Error = "Email o contraseña incorrectos";
-            return View();
+
+            foreach (var e in result.Errors) ModelState.AddModelError(string.Empty, e.Description);
+            return View(model);
         }
 
-        [HttpPost]
-        public async Task<IActionResult> Logout()
+        [HttpGet("/Account/Logout")]
+        public IActionResult LogoutGet()
+            => RedirectToPage("/Account/Logout", new { area = "Identity", returnUrl = Url.Action("Index", "Home") });
+
+        [HttpPost("/Account/Logout")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> LogoutPost()
         {
             await _signInManager.SignOutAsync();
             return RedirectToAction("Index", "Home");
         }
-
-        [HttpGet]
-        public IActionResult Register()
-        {
-            return View();
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> Register(string email, string password, DateTime fechaNacimiento, string nombreCompleto)
-        {
-            var user = new ApplicationUser
-            {
-                UserName = email,
-                Email = email,
-                FechaNacimiento = fechaNacimiento,
-                NombreCompleto = nombreCompleto
-            };
-
-            var result = await _userManager.CreateAsync(user, password);
-            if (result.Succeeded)
-            {
-                await _userManager.AddClaimAsync(user,
-                    new System.Security.Claims.Claim("FechaNacimiento", fechaNacimiento.ToString("yyyy-MM-dd")));
-
-                await _signInManager.SignInAsync(user, isPersistent: false);
-                return RedirectToAction("Index", "Home");
-            }
-
-            foreach (var error in result.Errors)
-            {
-                ModelState.AddModelError(string.Empty, error.Description);
-            }
-            return View();
-        }
-
-        public IActionResult AccessDenied()
-        {
-            return View();
-        }
     }
-
 }

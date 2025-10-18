@@ -1,4 +1,5 @@
-﻿@{
+﻿@model NetIdentity.Models.RegisterViewModel
+@{
     ViewData["Title"] = "Registrarse";
 }
 
@@ -10,32 +11,50 @@
             </div>
             <div class="card-body">
                 <div asp-validation-summary="All" class="text-danger"></div>
-                <form method="post" asp-action="Register">
+                <form asp-action="Register" method="post">
                     <div class="mb-3">
-                        <label for="nombreCompleto" class="form-label">Nombre Completo</label>
-                        <input type="text" class="form-control" id="nombreCompleto" name="nombreCompleto" required>
+                        <label asp-for="NombreCompleto" class="form-label"></label>
+                        <input asp-for="NombreCompleto" class="form-control" />
+                        <span asp-validation-for="NombreCompleto" class="text-danger"></span>
                     </div>
+
                     <div class="mb-3">
-                        <label for="email" class="form-label">Correo Electrónico</label>
-                        <input type="email" class="form-control" id="email" name="email" required>
+                        <label asp-for="Email" class="form-label"></label>
+                        <input asp-for="Email" class="form-control" />
+                        <span asp-validation-for="Email" class="text-danger"></span>
                     </div>
+
                     <div class="mb-3">
-                        <label for="fechaNacimiento" class="form-label">Fecha de Nacimiento</label>
-                        <input type="date" class="form-control" id="fechaNacimiento" name="fechaNacimiento" required>
+                        <label asp-for="FechaNacimiento" class="form-label"></label>
+                        <input asp-for="FechaNacimiento" type="date" class="form-control" />
+                        <span asp-validation-for="FechaNacimiento" class="text-danger"></span>
                         <small class="form-text text-muted">
                             Solo menores de 18 años pueden acceder a Juegos y Actividades
                         </small>
                     </div>
+
                     <div class="mb-3">
-                        <label for="password" class="form-label">Contraseña</label>
-                        <input type="password" class="form-control" id="password" name="password" required>
+                        <label asp-for="Genero" class="form-label"></label>
+                        <select asp-for="Genero" class="form-select">
+                            <option value="">Seleccione su género</option>
+                            <option value="Femenino">Femenino</option>
+                            <option value="Masculino">Masculino</option>
+                        </select>
+                        <span asp-validation-for="Genero" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Password" class="form-label"></label>
+                        <input asp-for="Password" class="form-control" type="password" />
+                        <span asp-validation-for="Password" class="text-danger"></span>
                         <small class="form-text text-muted">
                             Mínimo 6 caracteres, incluir mayúsculas, minúsculas y números
                         </small>
                     </div>
+
                     <button type="submit" class="btn btn-success w-100">Registrarse</button>
                 </form>
-                <hr>
+                <hr />
                 <p class="text-center">
                     ¿Ya tienes cuenta? <a asp-action="Login">Inicia sesión aquí</a>
                 </p>
