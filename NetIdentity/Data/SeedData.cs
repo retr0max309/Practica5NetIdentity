@@ -1,5 +1,9 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using System;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using NetIdentity.Models;
+using Claim = System.Security.Claims.Claim;
 
 namespace NetIdentity.Data
 {
@@ -11,7 +15,16 @@ namespace NetIdentity.Data
             var userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
             var context = serviceProvider.GetRequiredService<ApplicationDbContext>();
 
-            context.Database.EnsureCreated();
+            await context.Database.MigrateAsync();
+
+            await context.Database.ExecuteSqlRawAsync(@"
+IF COL_LENGTH('dbo.AspNetUsers','genero') IS NULL
+    ALTER TABLE dbo.AspNetUsers ADD genero NVARCHAR(256) NULL;
+IF COL_LENGTH('dbo.AspNetUsers','fecha_nacimiento') IS NULL
+    ALTER TABLE dbo.AspNetUsers ADD fecha_nacimiento DATETIME2 NULL;
+IF COL_LENGTH('dbo.AspNetUsers','nombre_completo') IS NULL
+    ALTER TABLE dbo.AspNetUsers ADD nombre_completo NVARCHAR(256) NULL;
+");
 
             string[] roleNames = { "Admin", "Usuario" };
             foreach (var roleName in roleNames)
@@ -37,8 +50,8 @@ namespace NetIdentity.Data
                 if (result.Succeeded)
                 {
                     await userManager.AddToRoleAsync(adminUser, "Admin");
-                    await userManager.AddClaimAsync(adminUser,
-                        new System.Security.Claims.Claim("FechaNacimiento", adminUser.FechaNacimiento.ToString("yyyy-MM-dd")));
+                    var fn = adminUser.FechaNacimiento?.ToString("yyyy-MM-dd") ?? "";
+                    await userManager.AddClaimAsync(adminUser, new Claim("FechaNacimiento", fn));
                 }
             }
 
@@ -57,8 +70,8 @@ namespace NetIdentity.Data
                 if (result.Succeeded)
                 {
                     await userManager.AddToRoleAsync(userMenor, "Usuario");
-                    await userManager.AddClaimAsync(userMenor,
-                        new System.Security.Claims.Claim("FechaNacimiento", userMenor.FechaNacimiento.ToString("yyyy-MM-dd")));
+                    var fn = userMenor.FechaNacimiento?.ToString("yyyy-MM-dd") ?? "";
+                    await userManager.AddClaimAsync(userMenor, new Claim("FechaNacimiento", fn));
                 }
             }
 
@@ -77,12 +90,10 @@ namespace NetIdentity.Data
                 if (result.Succeeded)
                 {
                     await userManager.AddToRoleAsync(userMayor, "Usuario");
-                    await userManager.AddClaimAsync(userMayor,
-                        new System.Security.Claims.Claim("FechaNacimiento", userMayor.FechaNacimiento.ToString("yyyy-MM-dd")));
+                    var fn = userMayor.FechaNacimiento?.ToString("yyyy-MM-dd") ?? "";
+                    await userManager.AddClaimAsync(userMayor, new Claim("FechaNacimiento", fn));
                 }
             }
         }
     }
-
-
 }
